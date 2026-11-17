@@ -1,0 +1,2671 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="artifact-type" content="tool">
+<meta name="design-style" content="sticker">
+<title>幾點鐘：撥鐘小達人挑戰賽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..900;1,9..40,400..900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+
+  /* 1. Sticker style palette & effects */
+  --background: #fef7ff;
+  --surface-container-low: #ffffff;
+  --surface-container: #f8eef8;
+  --surface-container-high: #f2e8f2;
+
+  --on-surface: #2e1a28;
+  --on-surface-variant: #604868;
+
+  --outline: #907898;
+  --outline-variant: #dcc8e0;
+
+  --primary: #c2207f;
+  --on-primary: #ffffff;
+  --primary-container: #f080c0;
+  --on-primary-container: #2e1a28;
+  --secondary: #7c52aa;
+  --on-secondary: #ffffff;
+  --tertiary: #0096cc;
+  --on-tertiary: #ffffff;
+  --error: #c53030;
+  --on-error: #ffffff;
+
+  --data-1: #c2207f;
+  --data-2: #7c52aa;
+  --data-3: #0096cc;
+  --data-4: #d96a00;
+  --data-context: #c8b8d0;
+
+  /* Clock & scene semantic tokens */
+  --clock-minute: #0077d4;
+  --clock-minute-light: #e0f2fe;
+  --clock-hour: #d92b4b;
+  --clock-hour-light: #ffe4e8;
+  --day-sky: #fff7db;
+  --day-sun: #f59e0b;
+  --day-sun-glow: #fde68a;
+  --afternoon-sky: #ffeedd;
+  --night-sky: #281b44;
+  --night-sky-text: #fef7ff;
+  --night-moon: #fde047;
+  --cert-gold: #d98200;
+  --cert-cream: #fffdf5;
+
+  /* 2. Fonts (Non-Latin first, then DM Sans) */
+  --font-headline: 'Noto Sans TC', 'DM Sans', sans-serif;
+  --font-body: 'Noto Sans TC', 'DM Sans', sans-serif;
+  --font-label: 'Noto Sans TC', 'DM Sans', sans-serif;
+
+  /* Shape */
+  --rounded: 1.25rem;
+  --rounded-lg: 2rem;
+  --rounded-full: 9999px;
+
+  /* Style effects */
+  --shadow-pink: 0 6px 20px rgb(224 64 160 / 0.18);
+  --shadow-pink-deep: 0 12px 30px rgb(224 64 160 / 0.30);
+  --shadow-grape: 0 6px 20px rgb(124 82 170 / 0.18);
+  --shadow-sky: 0 6px 20px rgb(0 150 204 / 0.18);
+  --shadow-positive: 0 6px 20px rgb(21 128 61 / 0.18);
+  --pop-scale: scale(1.03);
+  --lift: translateY(-3px);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* 3. Shared tokens */
+  --positive: #15803d;
+  --positive-container: #dcfce7;
+  --warning: #b45309;
+  --warning-container: #fef3c7;
+  --focus: #c2207f;
+
+  /* Type scale for Focused Tool (boosted for Grade 1 legibility + Zhuyin) */
+  --display-size: clamp(1.65rem, 1.25rem + 1.4vw, 2.35rem);
+  --headline-size: clamp(1.25rem, 1.05rem + 0.65vw, 1.6rem);
+  --subhead-size: clamp(1.05rem, 0.98rem + 0.35vw, 1.28rem);
+  --body-size: clamp(1rem, 0.95rem + 0.25vw, 1.15rem);
+  --label-size: 0.85rem;
+
+  /* Spacing scale (4pt base) */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.25rem;
+  --space-2xl: 3.5rem;
+  --space-3xl: 5rem;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+}
+
+/* Base reset */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  overflow-x: clip;
+  margin: 0;
+  padding: 0;
+  background-color: var(--background);
+  color: var(--on-surface);
+  font-family: var(--font-body);
+  font-size: var(--body-size);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+header { position: static !important; }
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Textbook right-side vertical Zhuyin */
+.zy-text {
+  display: inline;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.zy-char {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1.1;
+  margin-right: 0.08em;
+  margin-bottom: 0.14em;
+}
+
+.zy-han {
+  display: inline-block;
+  font-weight: inherit;
+  line-height: 1.15;
+}
+
+.zy-bopo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.42em;
+  line-height: 1.02;
+  margin-left: 0.06em;
+  padding-right: 0.48em;
+  position: relative;
+  min-width: 1.1em;
+  font-weight: 700;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+.zy-bopo.has-dot {
+  padding-top: 0.42em;
+}
+
+.zy-tone-dot {
+  position: absolute;
+  top: -0.05em;
+  left: 50%;
+  transform: translateX(-70%);
+  font-size: 0.95em;
+  line-height: 1;
+}
+
+.zy-syl-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.zy-sym {
+  display: block;
+  line-height: 1.04;
+}
+
+.zy-tone-side {
+  position: absolute;
+  right: -0.58em;
+  bottom: 0.05em;
+  font-size: 0.95em;
+  line-height: 1;
+}
+
+.zy-punc {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.06em;
+}
+
+.zy-num {
+  display: inline-block;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+  margin: 0 0.12em;
+  font-weight: 800;
+}
+
+/* Page layout */
+.page-grid {
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  max-width: 1160px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+.page-grid * { min-width: 0; }
+
+/* Top Banner */
+.hero-header {
+  background: var(--surface-container-low);
+  border-radius: var(--rounded-lg);
+  box-shadow: var(--shadow-pink);
+  padding: var(--space-lg) var(--space-xl);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.hero-brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.kicker-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-radius: var(--rounded-full);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--label-size);
+  font-weight: 700;
+  width: fit-content;
+}
+
+.display-title {
+  margin: 0;
+  font-family: var(--font-headline);
+  font-weight: 900;
+  font-size: var(--display-size);
+  line-height: 1.25;
+  color: var(--on-surface);
+}
+
+.display-title em {
+  font-style: normal;
+  color: var(--primary);
+}
+
+.hero-sub {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font-size: var(--body-size);
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Buttons & Pills */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  border: none;
+  border-radius: var(--rounded-full);
+  padding: var(--space-sm) var(--space-lg);
+  min-height: 46px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--dur-short) var(--ease-bounce),
+              box-shadow var(--dur-short) var(--ease-out),
+              background-color var(--dur-micro) var(--ease-out);
+  text-decoration: none;
+}
+
+.btn:hover:not(:disabled) {
+  transform: var(--pop-scale);
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-pink);
+  font-size: var(--subhead-size);
+  padding: var(--space-md) var(--space-xl);
+  min-height: 56px;
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: var(--shadow-pink-deep);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: var(--on-secondary);
+  box-shadow: var(--shadow-grape);
+}
+
+.btn-sky {
+  background: var(--tertiary);
+  color: var(--on-tertiary);
+  box-shadow: var(--shadow-sky);
+}
+
+.btn-soft {
+  background: var(--surface-container);
+  color: var(--on-surface);
+  border: 2px solid var(--outline-variant);
+}
+.btn-soft[aria-pressed="true"] {
+  background: var(--primary-container);
+  border-color: var(--primary);
+  color: var(--on-primary-container);
+}
+
+.btn-quiet {
+  background: transparent;
+  color: var(--primary);
+  padding: var(--space-sm) var(--space-md);
+}
+.btn-quiet:hover:not(:disabled) {
+  background: var(--surface-container);
+}
+
+/* Progress Card */
+.progress-strip {
+  background: var(--surface-container-low);
+  border-radius: var(--rounded);
+  box-shadow: var(--shadow-grape);
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.level-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.level-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-width: 48px;
+  height: 44px;
+  padding: 0 var(--space-md);
+  border-radius: var(--rounded-full);
+  border: 2px solid var(--outline-variant);
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform var(--dur-short) var(--ease-bounce),
+              background-color var(--dur-short) var(--ease-out);
+}
+.level-pill:hover {
+  transform: var(--pop-scale);
+}
+.level-pill.is-current {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-pink);
+}
+.level-pill.is-done {
+  background: var(--positive-container);
+  border-color: var(--positive);
+  color: var(--positive);
+}
+
+.progress-track-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex: 1 1 220px;
+  max-width: 340px;
+}
+
+.progress-track {
+  flex: 1;
+  height: 14px;
+  border-radius: var(--rounded-full);
+  background: var(--surface-container-high);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: var(--rounded-full);
+  background: var(--tertiary);
+  transition: width var(--dur-long) var(--ease-bounce);
+}
+
+.progress-count {
+  font-weight: 800;
+  color: var(--secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Main Workspace */
+.workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.card {
+  background: var(--surface-container-low);
+  border-radius: var(--rounded-lg);
+  padding: var(--space-lg);
+}
+
+.clock-card {
+  box-shadow: var(--shadow-sky);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  container-type: inline-size;
+}
+
+.story-card {
+  box-shadow: var(--shadow-pink);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  container-type: inline-size;
+}
+
+/* Clock Legends */
+.clock-header-row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.hand-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--rounded-full);
+  font-weight: 700;
+  font-size: var(--label-size);
+}
+
+.legend-chip.is-minute {
+  background: var(--clock-minute-light);
+  color: var(--on-surface);
+  border: 2px solid var(--clock-minute);
+}
+.legend-chip.is-hour {
+  background: var(--clock-hour-light);
+  color: var(--on-surface);
+  border: 2px solid var(--clock-hour);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--rounded-full);
+  display: inline-block;
+}
+.legend-dot.blue { background: var(--clock-minute); }
+.legend-dot.red { background: var(--clock-hour); }
+
+/* SVG Clock Container */
+.clock-stage {
+  position: relative;
+  width: 100%;
+  max-width: 410px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+}
+
+.clock-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+
+.clock-outer-ring {
+  fill: var(--surface-container);
+  stroke: var(--outline-variant);
+  stroke-width: 6;
+}
+.clock-dial {
+  fill: var(--surface-container-low);
+  stroke: var(--secondary);
+  stroke-width: 5;
+}
+.clock-cw-arc {
+  fill: none;
+  stroke: var(--outline-variant);
+  stroke-width: 3;
+  stroke-dasharray: 6 6;
+}
+.clock-tick-minor {
+  stroke: var(--outline-variant);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.clock-tick-major {
+  stroke: var(--secondary);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.clock-num {
+  fill: var(--on-surface);
+  font-family: 'DM Sans', 'Noto Sans TC', sans-serif;
+  font-weight: 900;
+  font-size: 27px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+.clock-num.is-top {
+  fill: var(--primary);
+}
+
+/* Hands */
+.hour-hand-group {
+  cursor: not-allowed;
+}
+.hour-shaft {
+  stroke: var(--clock-hour);
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+.hour-tip {
+  fill: var(--clock-hour);
+}
+.hour-hit-shield {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 26;
+}
+
+.minute-hand-group {
+  cursor: grab;
+}
+.minute-hand-group.is-dragging {
+  cursor: grabbing;
+}
+.minute-shaft {
+  stroke: var(--clock-minute);
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+.minute-tip-arrow {
+  fill: var(--clock-minute);
+}
+.minute-knob-ring {
+  fill: var(--surface-container-low);
+  stroke: var(--clock-minute);
+  stroke-width: 4;
+}
+.minute-knob-core {
+  fill: var(--clock-minute);
+}
+.minute-knob-halo {
+  fill: var(--clock-minute);
+  opacity: 0.22;
+}
+.minute-hit-target {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 30;
+}
+
+.clock-center-cap {
+  fill: var(--on-surface);
+  stroke: var(--surface-container-low);
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+/* Clock floating feedback pill */
+.clock-toast {
+  position: absolute;
+  bottom: var(--space-sm);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--on-surface);
+  color: var(--on-primary);
+  border-radius: var(--rounded-full);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--label-size);
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-short) var(--ease-out),
+              transform var(--dur-short) var(--ease-bounce);
+  z-index: 5;
+}
+.clock-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.clock-controls-row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.hint-box {
+  width: 100%;
+  background: var(--warning-container);
+  color: var(--on-surface);
+  border-radius: var(--rounded);
+  padding: var(--space-md);
+  border: 2px solid var(--warning);
+  display: none;
+}
+.hint-box.is-open {
+  display: block;
+}
+
+/* Story Panel */
+.scene-banner {
+  border-radius: var(--rounded);
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  background: var(--day-sky);
+  color: var(--on-surface);
+  transition: background-color var(--dur-long) var(--ease-out);
+}
+.scene-banner.is-afternoon {
+  background: var(--afternoon-sky);
+}
+.scene-banner.is-night {
+  background: var(--night-sky);
+  color: var(--night-sky-text);
+}
+
+.scene-svg-box {
+  width: 92px;
+  height: 92px;
+  flex-shrink: 0;
+  border-radius: var(--rounded);
+  background: var(--surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-grape);
+  overflow: hidden;
+}
+.scene-banner.is-night .scene-svg-box {
+  background: var(--secondary);
+}
+
+.scene-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.period-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--rounded-full);
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+  font-weight: 800;
+  width: fit-content;
+}
+
+.level-title {
+  margin: 0;
+  font-size: var(--headline-size);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.story-box {
+  background: var(--surface-container);
+  border-radius: var(--rounded);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.story-narrative {
+  margin: 0;
+  font-size: var(--subhead-size);
+  line-height: 1.85;
+}
+
+.story-prompt {
+  margin: 0;
+  font-size: var(--headline-size);
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.5;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* Feedback Banner */
+.feedback-banner {
+  border-radius: var(--rounded);
+  padding: var(--space-md) var(--space-lg);
+  display: none;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.feedback-banner.is-success {
+  display: flex;
+  background: var(--positive-container);
+  border: 2px solid var(--positive);
+  color: var(--on-surface);
+}
+.feedback-banner.is-retry {
+  display: flex;
+  background: var(--warning-container);
+  border: 2px solid var(--warning);
+  color: var(--on-surface);
+}
+
+.digital-clock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--on-surface);
+  color: var(--night-moon);
+  border-radius: var(--rounded-full);
+  padding: var(--space-xs) var(--space-lg);
+  font-weight: 900;
+  font-size: var(--subhead-size);
+  font-variant-numeric: tabular-nums;
+  width: fit-content;
+}
+
+/* Day Timeline Strip */
+.timeline-card {
+  background: var(--surface-container-low);
+  border-radius: var(--rounded-lg);
+  box-shadow: var(--shadow-grape);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.timeline-heading {
+  margin: 0;
+  font-size: var(--subhead-size);
+  font-weight: 800;
+}
+
+.timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.timeline-item {
+  border-radius: var(--rounded);
+  background: var(--surface-container);
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-xs);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform var(--dur-short) var(--ease-bounce);
+}
+.timeline-item:hover {
+  transform: var(--lift);
+}
+.timeline-item.is-active {
+  border-color: var(--primary);
+  background: var(--surface-container-low);
+  box-shadow: var(--shadow-pink);
+}
+.timeline-item.is-done {
+  background: var(--positive-container);
+  border-color: var(--positive);
+}
+.timeline-time {
+  font-weight: 800;
+  font-size: var(--label-size);
+  color: var(--secondary);
+}
+
+/* Victory & Certificate View */
+.victory-panel {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-lg);
+  background: var(--surface-container-low);
+  border-radius: var(--rounded-lg);
+  box-shadow: var(--shadow-pink-deep);
+  padding: var(--space-xl);
+}
+.victory-panel.is-visible {
+  display: flex;
+}
+
+.victory-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.name-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-md);
+  background: var(--surface-container);
+  padding: var(--space-lg);
+  border-radius: var(--rounded);
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1 1 240px;
+}
+
+.field-label {
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.name-input {
+  width: 100%;
+  min-height: 48px;
+  border-radius: var(--rounded-full);
+  border: 2px solid var(--outline);
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+  padding: var(--space-sm) var(--space-lg);
+  font-weight: 800;
+  font-size: var(--subhead-size);
+}
+.name-input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: var(--shadow-pink);
+}
+
+/* Printable Certificate Frame */
+.certificate-frame {
+  background: var(--cert-cream);
+  border: 6px solid var(--cert-gold);
+  border-radius: var(--rounded-lg);
+  padding: var(--space-xl);
+  position: relative;
+  box-shadow: var(--shadow-grape);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-md);
+}
+
+.certificate-inner-border {
+  width: 100%;
+  border: 3px dashed var(--primary-container);
+  border-radius: var(--rounded);
+  padding: var(--space-xl) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.cert-seal {
+  width: 84px;
+  height: 84px;
+  border-radius: var(--rounded-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-pink);
+}
+
+.cert-title {
+  margin: 0;
+  font-size: var(--display-size);
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.cert-recipient {
+  font-size: clamp(1.75rem, 1.3rem + 1.5vw, 2.5rem);
+  font-weight: 900;
+  color: var(--secondary);
+  border-bottom: 4px solid var(--primary-container);
+  padding: var(--space-xs) var(--space-xl);
+  min-width: 220px;
+}
+
+.cert-body {
+  max-width: 58ch;
+  margin: 0;
+  font-size: var(--subhead-size);
+  line-height: 1.9;
+}
+
+.cert-footer {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 2px solid var(--outline-variant);
+  font-weight: 700;
+  color: var(--on-surface-variant);
+}
+
+/* Confetti Canvas */
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Animations */
+@keyframes softShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+.shake-once {
+  animation: softShake var(--dur-short) var(--ease-out);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+  .timeline-grid {
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .page-grid {
+    padding: var(--space-sm);
+    gap: var(--space-md);
+  }
+  .hero-header, .card, .victory-panel {
+    padding: var(--space-md);
+  }
+  .scene-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .scene-meta {
+    align-items: center;
+  }
+  .certificate-frame {
+    padding: var(--space-md);
+  }
+  .certificate-inner-border {
+    padding: var(--space-md);
+  }
+}
+
+/* Print Styles for Certificate */
+@media print {
+  body {
+    background: var(--surface-container-low);
+  }
+  .hero-header,
+  .progress-strip,
+  .workspace-grid,
+  .timeline-card,
+  .victory-header,
+  .name-form-row,
+  .victory-actions,
+  .confetti-canvas {
+    display: none !important;
+  }
+  .victory-panel {
+    display: flex !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .certificate-frame {
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+
+<div class="page-grid">
+  <!-- Top Header -->
+  <header class="hero-header">
+    <div class="hero-brand">
+      <div class="kicker-pill" data-zy="一年級數學・第九單元"></div>
+      <h1 class="display-title">
+        <span data-zy="幾點鐘："></span><em><span data-zy="撥鐘小達人"></span></em><span data-zy="挑戰賽"></span>
+      </h1>
+      <p class="hero-sub" data-zy="跟著妙妙過一天！拉動藍色長針，順時針撥出正確的時間。"></p>
+    </div>
+
+    <div class="toolbar-actions">
+      <button type="button" id="btn-sound" class="btn btn-soft" aria-pressed="true" onclick="toggleSound()">
+        <span aria-hidden="true">🔔</span>
+        <span id="sound-label" data-zy="音效開啟"></span>
+      </button>
+      <button type="button" id="btn-autospeak" class="btn btn-soft" aria-pressed="true" onclick="toggleAutoSpeak()">
+        <span aria-hidden="true">🗣️</span>
+        <span id="autospeak-label" data-zy="自動唸題目"></span>
+      </button>
+      <button type="button" id="btn-reset-all" class="btn btn-quiet" onclick="handleResetAll(this)">
+        <span aria-hidden="true">🔄</span>
+        <span id="reset-all-label" data-zy="重新挑戰"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Progress Strip -->
+  <section class="progress-strip" aria-label="挑戰進度">
+    <div class="level-pills" id="level-pills" role="tablist" aria-label="選擇關卡"></div>
+    <div class="progress-track-wrap">
+      <span class="progress-count" id="progress-text">0 / 7</span>
+      <div class="progress-track" aria-hidden="true">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+    <button type="button" id="btn-open-cert" class="btn btn-secondary" onclick="showCertificateView()" style="display:none;">
+      <span aria-hidden="true">🏆</span>
+      <span data-zy="查看榮譽獎狀"></span>
+    </button>
+  </section>
+
+  <!-- Main Interactive Simulator Workspace -->
+  <main id="challenge-workspace" class="workspace-grid">
+    <!-- Left: Interactive Clock -->
+    <section class="card clock-card" aria-label="操作時鐘區">
+      <div class="clock-header-row">
+        <div class="hand-legend">
+          <span class="legend-chip is-minute">
+            <span class="legend-dot blue" aria-hidden="true"></span>
+            <span data-zy="藍色長針（分針）"></span>
+          </span>
+          <span class="legend-chip is-hour">
+            <span class="legend-dot red" aria-hidden="true"></span>
+            <span data-zy="紅色短針（時針）"></span>
+          </span>
+        </div>
+        <span class="legend-chip" data-zy="↻ 只能順時針轉"></span>
+      </div>
+
+      <div class="clock-stage" id="clock-stage">
+        <svg class="clock-svg" id="clock-svg" viewBox="0 0 400 400" role="img" aria-label="互動練習時鐘">
+          <!-- Outer bezel & dial -->
+          <circle class="clock-outer-ring" cx="200" cy="200" r="186"/>
+          <circle class="clock-dial" cx="200" cy="200" r="172"/>
+          <!-- Subtle clockwise guide arc -->
+          <path class="clock-cw-arc" d="M 248 54 A 154 154 0 0 1 346 152"/>
+          <!-- Ticks and numbers generated by JS -->
+          <g id="clock-ticks"></g>
+          <g id="clock-numbers"></g>
+
+          <!-- Hour Hand (LOCKED: cannot be dragged directly) -->
+          <g id="hour-hand-group" class="hour-hand-group" transform="rotate(180 200 200)">
+            <line class="hour-hit-shield" x1="200" y1="208" x2="200" y2="108"/>
+            <line class="hour-shaft" x1="200" y1="212" x2="200" y2="112"/>
+            <polygon class="hour-tip" points="200,96 190,118 210,118"/>
+          </g>
+
+          <!-- Minute Hand (DRAGGABLE: tip knob strictly inside same group) -->
+          <g id="minute-hand-group" class="minute-hand-group" transform="rotate(0 200 200)"
+             tabindex="0" role="slider" aria-label="藍色長針，使用方向鍵或滑鼠順時針撥動" aria-valuemin="0" aria-valuemax="720" aria-valuenow="0">
+            <line class="minute-hit-target" x1="200" y1="200" x2="200" y2="56"/>
+            <line class="minute-shaft" x1="200" y1="214" x2="200" y2="66"/>
+            <polygon class="minute-tip-arrow" points="200,48 191,72 209,72"/>
+            <!-- Drag control blue knob LOCKED at tip (200, 62) -->
+            <circle class="minute-knob-halo" cx="200" cy="62" r="24"/>
+            <circle class="minute-knob-ring" cx="200" cy="62" r="15"/>
+            <circle class="minute-knob-core" cx="200" cy="62" r="7"/>
+            <circle class="minute-hit-target" cx="200" cy="62" r="30"/>
+          </g>
+
+          <!-- Center pivot cap -->
+          <circle class="clock-center-cap" cx="200" cy="200" r="10"/>
+        </svg>
+
+        <div id="clock-toast" class="clock-toast" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="clock-controls-row">
+        <button type="button" class="btn btn-soft" onclick="resetLevelClock()">
+          <span aria-hidden="true">↺</span>
+          <span data-zy="轉回起點"></span>
+        </button>
+        <button type="button" id="btn-hint-toggle" class="btn btn-soft" aria-expanded="false" onclick="toggleHint()">
+          <span aria-hidden="true">💡</span>
+          <span data-zy="需要提示嗎？"></span>
+        </button>
+      </div>
+
+      <div id="hint-box" class="hint-box">
+        <p id="hint-text" style="margin:0;"></p>
+      </div>
+    </section>
+
+    <!-- Right: Story, Controls & Feedback -->
+    <section class="card story-card" aria-label="關卡題目區">
+      <div id="scene-banner" class="scene-banner">
+        <div class="scene-svg-box" id="scene-svg-box" aria-hidden="true"></div>
+        <div class="scene-meta">
+          <div class="period-badge" id="period-badge"></div>
+          <h2 class="level-title" id="level-title"></h2>
+        </div>
+      </div>
+
+      <div class="story-box">
+        <p class="story-narrative" id="story-narrative"></p>
+        <p class="story-prompt" id="story-prompt"></p>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-sky" onclick="speakCurrentQuestion()">
+          <span aria-hidden="true">🔊</span>
+          <span data-zy="聽題目"></span>
+        </button>
+        <button type="button" id="btn-check" class="btn btn-primary" onclick="checkAnswer()">
+          <span aria-hidden="true">✔</span>
+          <span data-zy="檢查答案"></span>
+        </button>
+      </div>
+
+      <div id="feedback-banner" class="feedback-banner" role="status" aria-live="polite">
+        <div id="feedback-digital" class="digital-clock-badge" style="display:none;"></div>
+        <p id="feedback-text" style="margin:0; font-weight:700;"></p>
+        <div id="feedback-next-row" style="display:none; margin-top: var(--space-xs);">
+          <button type="button" id="btn-next-level" class="btn btn-secondary" onclick="goToNextLevel()">
+            <span id="next-btn-label"></span>
+            <span aria-hidden="true">➜</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Daily Routine Timeline -->
+  <section id="timeline-section" class="timeline-card" aria-label="妙妙的一天時間軸">
+    <h3 class="timeline-heading" data-zy="妙妙的一天：上午、中午、下午和晚上"></h3>
+    <div class="timeline-grid" id="timeline-grid"></div>
+  </section>
+
+  <!-- Victory & Custom Certificate Section -->
+  <section id="victory-panel" class="victory-panel" aria-label="撥鐘小達人榮譽獎狀">
+    <div class="victory-header">
+      <div>
+        <h2 class="level-title" data-zy="太厲害了！你成為「撥鐘小達人」了！"></h2>
+        <p class="hero-sub" data-zy="你已經完成全部七道挑戰，學會看懂整點和上午、中午、下午、晚上囉！"></p>
+      </div>
+      <button type="button" class="btn btn-soft" onclick="backToPractice()">
+        <span aria-hidden="true">←</span>
+        <span data-zy="回到關卡練習"></span>
+      </button>
+    </div>
+
+    <div class="name-form-row">
+      <div class="field-group">
+        <label for="student-name-input" class="field-label" data-zy="請輸入小朋友的名字（獎狀會馬上更新喔）："></label>
+        <input type="text" id="student-name-input" class="name-input" maxlength="16" placeholder="例如：王小明" oninput="onStudentNameInput(this.value)">
+      </div>
+    </div>
+
+    <article class="certificate-frame" id="certificate-preview" aria-label="專屬榮譽獎狀預覽">
+      <div class="certificate-inner-border">
+        <div class="cert-seal" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="19" stroke="currentColor" stroke-width="3.5"/>
+            <line x1="24" y1="24" x2="24" y2="11" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="24" y1="24" x2="34" y2="24" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="24" cy="24" r="2.5" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <h3 class="cert-title" data-zy="撥鐘小達人榮譽獎狀"></h3>
+        <div class="cert-recipient" id="cert-name-display"></div>
+
+        <p class="cert-body" id="cert-body-text" data-zy="完成「幾點鐘」全部七道生活作息撥鐘挑戰，能正確辨識長針、短針與上午、中午、下午、晚上的整點時刻，表現非常優秀，特頒此狀，以資鼓勵！"></p>
+
+        <div class="cert-footer">
+          <span data-zy="頒發單位：一年級數學時間探索學院"></span>
+          <span id="cert-date-display"></span>
+        </div>
+      </div>
+    </article>
+
+    <div class="action-row victory-actions">
+      <button type="button" class="btn btn-primary" onclick="downloadCertificatePng()">
+        <span aria-hidden="true">📥</span>
+        <span data-zy="下載獎狀圖片"></span>
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="printCertificate()">
+        <span aria-hidden="true">🖨️</span>
+        <span data-zy="列印獎狀"></span>
+      </button>
+      <button type="button" class="btn btn-soft" onclick="replayFromVictory()">
+        <span aria-hidden="true">🔄</span>
+        <span data-zy="再玩一次"></span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<api-shim></api-shim>
+
+<script>
+// ============================================================================
+// 1. Ministry of Education Standard Zhuyin Dictionary & Polyphone Resolver
+// ============================================================================
+const BOPO_DICT = {
+  '一': 'ㄧ', '七': 'ㄑㄧ', '三': 'ㄙㄢ', '上': 'ㄕㄤˋ', '下': 'ㄒㄧㄚˋ',
+  '不': 'ㄅㄨˋ', '中': 'ㄓㄨㄥ', '九': 'ㄐㄧㄡˇ', '了': 'ㄌㄜ˙', '二': 'ㄦˋ',
+  '五': 'ㄨˇ', '些': 'ㄒㄧㄝ', '亮': 'ㄌㄧㄤˋ', '人': 'ㄖㄣˊ', '今': 'ㄐㄧㄣ',
+  '他': 'ㄊㄚ', '以': 'ㄧˇ', '們': 'ㄇㄣ˙', '使': 'ㄕˇ', '例': 'ㄌㄧˋ',
+  '來': 'ㄌㄞˊ', '保': 'ㄅㄠˇ', '個': 'ㄍㄜ˙', '候': 'ㄏㄡˋ', '倒': 'ㄉㄠˋ',
+  '做': 'ㄗㄨㄛˋ', '備': 'ㄅㄟˋ', '優': 'ㄧㄡ', '先': 'ㄒㄧㄢ', '光': 'ㄍㄨㄤ',
+  '全': 'ㄑㄩㄢˊ', '兩': 'ㄌㄧㄤˇ', '八': 'ㄅㄚ', '公': 'ㄍㄨㄥ', '六': 'ㄌㄧㄡˋ',
+  '共': 'ㄍㄨㄥˋ', '具': 'ㄐㄩˋ', '出': 'ㄔㄨ', '分': 'ㄈㄣ', '別': 'ㄅㄧㄝˊ',
+  '到': 'ㄉㄠˋ', '前': 'ㄑㄧㄢˊ', '動': 'ㄉㄨㄥˋ', '助': 'ㄓㄨˋ', '勵': 'ㄌㄧˋ',
+  '十': 'ㄕˊ', '午': 'ㄨˇ', '卡': 'ㄎㄚˇ', '印': 'ㄧㄣˋ', '去': 'ㄑㄩˋ',
+  '又': 'ㄧㄡˋ', '友': 'ㄧㄡˇ', '只': 'ㄓˇ', '可': 'ㄎㄜˇ', '吃': 'ㄔ',
+  '各': 'ㄍㄜˋ', '合': 'ㄏㄜˊ', '同': 'ㄊㄨㄥˊ', '名': 'ㄇㄧㄥˊ', '向': 'ㄒㄧㄤˋ',
+  '嗎': 'ㄇㄚ˙', '吧': 'ㄅㄚ˙', '聽': 'ㄊㄧㄥ', '呀': 'ㄧㄚ˙', '告': 'ㄍㄠˋ',
+  '味': 'ㄨㄟˋ', '和': 'ㄏㄢˋ', '咕': 'ㄍㄨ', '品': 'ㄆㄧㄣˇ', '哪': 'ㄋㄚˇ',
+  '唱': 'ㄔㄤˋ', '啊': 'ㄚ˙', '啟': 'ㄑㄧˇ', '啦': 'ㄌㄚ˙', '喜': 'ㄒㄧˇ',
+  '喔': 'ㄛ', '嚕': 'ㄌㄨ', '囉': 'ㄌㄨㄛ˙', '四': 'ㄙˋ', '回': 'ㄏㄨㄟˊ',
+  '因': 'ㄧㄣ', '圓': 'ㄩㄢˊ', '圖': 'ㄊㄨˊ', '在': 'ㄗㄞˋ', '地': 'ㄉㄧˋ',
+  '場': 'ㄔㄤˇ', '大': 'ㄉㄚˋ', '天': 'ㄊㄧㄢ', '太': 'ㄊㄞˋ', '好': 'ㄏㄠˇ',
+  '如': 'ㄖㄨˊ', '妙': 'ㄇㄧㄠˋ', '媽': 'ㄇㄚ', '字': 'ㄗˋ', '學': 'ㄒㄩㄝˊ',
+  '完': 'ㄨㄢˊ', '家': 'ㄐㄧㄚ', '室': 'ㄕˋ', '對': 'ㄉㄨㄟˋ', '小': 'ㄒㄧㄠˇ',
+  '尖': 'ㄐㄧㄢ', '就': 'ㄐㄧㄡˋ', '己': 'ㄐㄧˇ', '已': 'ㄧˇ', '常': 'ㄔㄤˊ',
+  '年': 'ㄋㄧㄢˊ', '幾': 'ㄐㄧˇ', '床': 'ㄔㄨㄤˊ', '庭': 'ㄊㄧㄥˊ', '座': 'ㄗㄨㄛˋ',
+  '延': 'ㄧㄢˊ', '開': 'ㄎㄞ', '張': 'ㄓㄤ', '很': 'ㄏㄣˇ', '後': 'ㄏㄡˋ',
+  '得': 'ㄉㄜ˙', '從': 'ㄘㄨㄥˊ', '復': 'ㄈㄨˋ', '微': 'ㄨㄟˊ', '心': 'ㄒㄧㄣ',
+  '快': 'ㄎㄨㄞˋ', '念': 'ㄋㄧㄢˋ', '唸': 'ㄋㄧㄢˋ', '怎': 'ㄗㄣˇ', '您': 'ㄋㄧㄣˊ',
+  '想': 'ㄒㄧㄤˇ', '愛': 'ㄞˋ', '感': 'ㄍㄢˇ', '慢': 'ㄇㄢˋ', '成': 'ㄔㄥˊ',
+  '我': 'ㄨㄛˇ', '才': 'ㄘㄞˊ', '打': 'ㄉㄚˇ', '找': 'ㄓㄠˇ', '把': 'ㄅㄚˇ',
+  '拉': 'ㄌㄚ', '拿': 'ㄋㄚˊ', '指': 'ㄓˇ', '按': 'ㄢˋ', '挑': 'ㄊㄧㄠˇ',
+  '掉': 'ㄉㄧㄠˋ', '排': 'ㄆㄞˊ', '接': 'ㄐㄧㄝ', '推': 'ㄊㄨㄟ', '提': 'ㄊㄧˊ',
+  '撥': 'ㄅㄛ', '操': 'ㄘㄠ', '放': 'ㄈㄤˋ', '故': 'ㄍㄨˋ', '效': 'ㄒㄧㄠˋ',
+  '教': 'ㄐㄧㄠˋ', '整': 'ㄓㄥˇ', '數': 'ㄕㄨˋ', '文': 'ㄨㄣˊ', '新': 'ㄒㄧㄣ',
+  '方': 'ㄈㄤ', '於': 'ㄩˊ', '日': 'ㄖˋ', '早': 'ㄗㄠˇ', '明': 'ㄇㄧㄥˊ',
+  '星': 'ㄒㄧㄥ', '春': 'ㄔㄨㄣ', '是': 'ㄕˋ', '時': 'ㄕˊ', '晚': 'ㄨㄢˇ',
+  '書': 'ㄕㄨ', '最': 'ㄗㄨㄟˋ', '月': 'ㄩㄝˋ', '有': 'ㄧㄡˇ', '朋': 'ㄆㄥˊ',
+  '期': 'ㄑㄧˊ', '棒': 'ㄅㄤˋ', '櫃': 'ㄍㄨㄟˋ', '檢': 'ㄐㄧㄢˇ', '歡': 'ㄏㄨㄢ',
+  '次': 'ㄘˋ', '正': 'ㄓㄥˋ', '步': 'ㄅㄨˋ', '每': 'ㄇㄟˇ', '比': 'ㄅㄧˇ',
+  '洗': 'ㄒㄧˇ', '活': 'ㄏㄨㄛˊ', '流': 'ㄌㄧㄡˊ', '溜': 'ㄌㄧㄡ', '滑': 'ㄏㄨㄚˊ',
+  '滿': 'ㄇㄢˇ', '準': 'ㄓㄨㄣˇ', '演': 'ㄧㄢˇ', '漫': 'ㄇㄢˋ', '點': 'ㄉㄧㄢˇ',
+  '照': 'ㄓㄠˋ', '爸': 'ㄅㄚˋ', '特': 'ㄊㄜˋ', '狀': 'ㄓㄨㄤˋ', '王': 'ㄨㄤˊ',
+  '玩': 'ㄨㄢˊ', '現': 'ㄒㄧㄢˋ', '理': 'ㄌㄧˇ', '班': 'ㄅㄢ', '生': 'ㄕㄥ',
+  '用': 'ㄩㄥˋ', '田': 'ㄊㄧㄢˊ', '畫': 'ㄏㄨㄚˋ', '當': 'ㄉㄤ', '發': 'ㄈㄚ',
+  '白': 'ㄅㄞˊ', '的': 'ㄉㄜ˙', '盤': 'ㄆㄢˊ', '目': 'ㄇㄨˋ', '直': 'ㄓˊ',
+  '相': 'ㄒㄧㄤ', '看': 'ㄎㄢˋ', '真': 'ㄓㄣ', '眼': 'ㄧㄢˇ', '睡': 'ㄕㄨㄟˋ',
+  '知': 'ㄓ', '短': 'ㄉㄨㄢˇ', '示': 'ㄕˋ', '祝': 'ㄓㄨˋ', '神': 'ㄕㄣˊ',
+  '秒': 'ㄇㄧㄠˇ', '移': 'ㄧˊ', '程': 'ㄔㄥˊ', '第': 'ㄉㄧˋ', '算': 'ㄙㄨㄢˋ',
+  '精': 'ㄐㄧㄥ', '紅': 'ㄏㄨㄥˊ', '紙': 'ㄓˇ', '級': 'ㄐㄧˊ', '細': 'ㄒㄧˋ',
+  '結': 'ㄐㄧㄝˊ', '給': 'ㄍㄟˇ', '統': 'ㄊㄨㄥˇ', '線': 'ㄒㄧㄢˋ', '練': 'ㄌㄧㄢˋ',
+  '美': 'ㄇㄟˇ', '老': 'ㄌㄠˇ', '者': 'ㄓㄜˇ', '耍': 'ㄕㄨㄚˇ', '而': 'ㄦˊ',
+  '聰': 'ㄘㄨㄥ', '聲': 'ㄕㄥ', '肚': 'ㄉㄨˋ', '育': 'ㄩˋ', '能': 'ㄋㄥˊ',
+  '臉': 'ㄌㄧㄢˇ', '自': 'ㄗˋ', '至': 'ㄓˋ', '與': 'ㄩˇ', '色': 'ㄙㄜˋ',
+  '花': 'ㄏㄨㄚ', '表': 'ㄅㄧㄠˇ', '裡': 'ㄌㄧˇ', '補': 'ㄅㄨˇ', '裝': 'ㄓㄨㄤ',
+  '西': 'ㄒㄧ', '要': 'ㄧㄠˋ', '見': 'ㄐㄧㄢˋ', '觀': 'ㄍㄨㄢ', '覺': 'ㄐㄧㄠˋ',
+  '解': 'ㄐㄧㄝˇ', '計': 'ㄐㄧˋ', '記': 'ㄐㄧˋ', '試': 'ㄕˋ', '話': 'ㄏㄨㄚˋ',
+  '該': 'ㄍㄞ', '認': 'ㄖㄣˋ', '說': 'ㄕㄨㄛ', '課': 'ㄎㄜˋ', '誰': 'ㄕㄟˊ',
+  '請': 'ㄑㄧㄥˇ', '讀': 'ㄉㄨˊ', '變': 'ㄅㄧㄢˋ', '象': 'ㄒㄧㄤˋ', '負': 'ㄈㄨˋ',
+  '責': 'ㄗㄜˊ', '買': 'ㄇㄞˇ', '資': 'ㄗ', '賞': 'ㄕㄤˇ', '起': 'ㄑㄧˇ',
+  '超': 'ㄔㄠ', '跳': 'ㄊㄧㄠˋ', '跟': 'ㄍㄣ', '路': 'ㄌㄨˋ', '身': 'ㄕㄣ',
+  '車': 'ㄔㄜ', '轉': 'ㄓㄨㄢˇ', '輕': 'ㄑㄧㄥ', '載': 'ㄗㄞˋ', '過': 'ㄍㄨㄛˋ',
+  '道': 'ㄉㄠˋ', '還': 'ㄏㄞˊ', '那': 'ㄋㄚˋ', '部': 'ㄅㄨˋ', '都': 'ㄉㄡ',
+  '配': 'ㄆㄟˋ', '重': 'ㄔㄨㄥˊ', '野': 'ㄧㄝˇ', '針': 'ㄓㄣ', '鐘': 'ㄓㄨㄥ',
+  '鎖': 'ㄙㄨㄛˇ', '長': 'ㄔㄤˊ', '開': 'ㄎㄞ', '間': 'ㄐㄧㄢ', '關': 'ㄍㄨㄢ',
+  '阿': 'ㄚ', '院': 'ㄩㄢˋ', '除': 'ㄔㄨˊ', '陽': 'ㄧㄤˊ', '難': 'ㄋㄢˊ',
+  '雨': 'ㄩˇ', '青': 'ㄑㄧㄥ', '面': 'ㄇㄧㄢˋ', '音': 'ㄧㄣ', '順': 'ㄕㄨㄣˋ',
+  '須': 'ㄒㄩ', '頭': 'ㄊㄡˊ', '題': 'ㄊㄧˊ', '顏': 'ㄧㄢˊ', '風': 'ㄈㄥ',
+  '飛': 'ㄈㄟ', '飯': 'ㄈㄢˋ', '養': 'ㄧㄤˇ', '餐': 'ㄘㄢ', '首': 'ㄕㄡˇ',
+  '香': 'ㄒㄧㄤ', '馬': 'ㄇㄚˇ', '高': 'ㄍㄠ', '點': 'ㄉㄧㄢˇ', '鼓': 'ㄍㄨˇ',
+  '齊': 'ㄑㄧˊ', '齒': 'ㄔˇ', '龍': 'ㄌㄨㄥˊ',
+  '著': 'ㄓㄜ˙', '住': 'ㄓㄨˋ', '梯': 'ㄊㄧ', '刷': 'ㄕㄨㄚ', '牙': 'ㄧㄚˊ',
+  '營': 'ㄧㄥˊ', '掃': 'ㄙㄠˇ', '遊': 'ㄧㄡˊ', '戲': 'ㄒㄧˋ', '功': 'ㄍㄨㄥ',
+  '眨': 'ㄓㄚˇ', '賽': 'ㄙㄞˋ', '戰': 'ㄓㄢˋ', '達': 'ㄉㄚˊ', '藍': 'ㄌㄢˊ',
+  '勵': 'ㄌㄧˋ', '榮': 'ㄖㄨㄥˊ', '譽': 'ㄩˋ', '頒': 'ㄅㄢ', '單': 'ㄉㄢ',
+  '元': 'ㄩㄢˊ', '進': 'ㄐㄧㄣˋ', '度': 'ㄉㄨˋ', '閉': 'ㄅㄧˋ', '查': 'ㄔㄚˊ',
+  '案': 'ㄢˋ', '軸': 'ㄓㄡˊ', '作': 'ㄗㄨㄛˋ', '息': 'ㄒㄧˊ', '辦': 'ㄅㄢˋ',
+  '位': 'ㄨㄟˋ', '印': 'ㄧㄣˋ', '獎': 'ㄐㄧㄤˇ', '例': 'ㄌㄧˋ', '此': 'ㄘˇ',
+  '秀': 'ㄒㄧㄨˋ', '厲': 'ㄌㄧˋ', '害': 'ㄏㄞˋ', '退': 'ㄊㄨㄟˋ', '哎': 'ㄞ',
+  '夜': 'ㄧㄝˋ', '差': 'ㄔㄚ', '列': 'ㄌㄧㄝˋ', '寫': 'ㄒㄧㄝˇ', '預': 'ㄩˋ',
+  '覽': 'ㄌㄢˇ', '領': 'ㄌㄧㄥˇ', '取': 'ㄑㄩˇ', '習': 'ㄒㄧˊ', '更': 'ㄍㄥˋ',
+  '校': 'ㄒㄧㄠˋ', '會': 'ㄏㄨㄟˋ', '這': 'ㄓㄜˋ', '端': 'ㄉㄨㄢ', '並': 'ㄅㄧㄥˋ',
+  '為': 'ㄨㄟˊ', '辨': 'ㄅㄧㄢˋ', '識': 'ㄕˋ', '非': 'ㄈㄟ', '探': 'ㄊㄢˋ',
+  '索': 'ㄙㄨㄛˇ', '頁': 'ㄧㄝˋ', '將': 'ㄐㄧㄤ', '碼': 'ㄇㄚˇ', '入': 'ㄖㄨˋ',
+  '輸': 'ㄕㄨ', '答': 'ㄉㄚˊ', '沒': 'ㄇㄟˊ', '收': 'ㄕㄡ', '設': 'ㄕㄜˋ'
+};
+
+// Context-sensitive multi-character overrides (MOE 簡編本)
+const WORD_POLYPHONES = {
+  '睡覺': ['ㄕㄨㄟˋ', 'ㄐㄧㄠˋ'],
+  '數學': ['ㄕㄨˋ', 'ㄒㄩㄝˊ'],
+  '數字': ['ㄕㄨˋ', 'ㄗˋ'],
+  '教室': ['ㄐㄧㄠˋ', 'ㄕˋ'],
+  '操場': ['ㄘㄠ', 'ㄔㄤˇ'],
+  '挑戰': ['ㄊㄧㄠˇ', 'ㄓㄢˋ'],
+  '長針': ['ㄔㄤˊ', 'ㄓㄣ'],
+  '順時針': ['ㄕㄨㄣˋ', 'ㄕˊ', 'ㄓㄣ'],
+  '指著': ['ㄓˇ', 'ㄓㄜ˙'],
+  '拉著': ['ㄌㄚ', 'ㄓㄜ˙'],
+  '照著': ['ㄓㄠˋ', 'ㄓㄜ˙'],
+  '跟著': ['ㄍㄣ', 'ㄓㄜ˙'],
+  '倒退': ['ㄉㄠˋ', 'ㄊㄨㄟˋ'],
+  '只能': ['ㄓˇ', 'ㄋㄥˊ'],
+  '重頭': ['ㄔㄨㄥˊ', 'ㄊㄡˊ'],
+  '下載': ['ㄒㄧㄚˋ', 'ㄗㄞˋ'],
+  '轉動': ['ㄓㄨㄢˇ', 'ㄉㄨㄥˋ'],
+  '轉回': ['ㄓㄨㄢˇ', 'ㄏㄨㄟˊ'],
+  '轉轉': ['ㄓㄨㄢˇ', 'ㄓㄨㄢˇ'],
+  '轉一': ['ㄓㄨㄢˇ', 'ㄧ'],
+  '還差': ['ㄏㄞˊ', 'ㄔㄚ'],
+  '還要': ['ㄏㄞˊ', 'ㄧㄠˋ'],
+  '還沒': ['ㄏㄞˊ', 'ㄇㄟˊ'],
+  '好好': ['ㄏㄠˇ', 'ㄏㄠˇ'],
+  '準備': ['ㄓㄨㄣˇ', 'ㄅㄟˋ'],
+  '好朋友': ['ㄏㄠˇ', 'ㄆㄥˊ', 'ㄧㄡˇ'],
+  '中午': ['ㄓㄨㄥ', 'ㄨˇ'],
+  '上午': ['ㄕㄤˋ', 'ㄨˇ'],
+  '下午': ['ㄒㄧㄚˋ', 'ㄨˇ'],
+  '晚上': ['ㄨㄢˇ', 'ㄕㄤˋ'],
+  '成為': ['ㄔㄥˊ', 'ㄨㄟˊ'],
+  '著急': ['ㄓㄠˊ', 'ㄐㄧˊ'],
+  '打掃': ['ㄉㄚˇ', 'ㄙㄠˇ'],
+  '整理': ['ㄓㄥˇ', 'ㄌㄧˇ'],
+  '整齊': ['ㄓㄥˇ', 'ㄑㄧˊ'],
+  '看清楚': ['ㄎㄢˋ', 'ㄑㄧㄥ', 'ㄔㄨˇ']
+};
+
+function parseZhuyinSyllable(bopo) {
+  if (!bopo) return null;
+  let hasDot = false;
+  let toneSide = '';
+  let body = bopo;
+
+  if (body.includes('˙')) {
+    hasDot = true;
+    body = body.replace('˙', '');
+  }
+  const sideMatch = body.match(/[ˊˇˋ]$/);
+  if (sideMatch) {
+    toneSide = sideMatch[0];
+    body = body.slice(0, -1);
+  }
+  return { symbols: Array.from(body), hasDot, toneSide };
+}
+
+function buildZhuyinNodes(text) {
+  const frag = document.createDocumentFragment();
+  if (!text) return frag;
+
+  // Accessible plain text for screen readers
+  const srSpan = document.createElement('span');
+  srSpan.className = 'sr-only';
+  srSpan.textContent = text;
+  frag.appendChild(srSpan);
+
+  const visualWrap = document.createElement('span');
+  visualWrap.className = 'zy-text';
+  visualWrap.setAttribute('aria-hidden', 'true');
+
+  const chars = Array.from(text);
+  const polyKeys = Object.keys(WORD_POLYPHONES).sort((a, b) => b.length - a.length);
+
+  let i = 0;
+  while (i < chars.length) {
+    // Check polyphone word match
+    let matchedWord = null;
+    for (let k = 0; k < polyKeys.length; k++) {
+      const w = polyKeys[k];
+      if (text.startsWith(w, i)) {
+        matchedWord = w;
+        break;
+      }
+    }
+
+    if (matchedWord) {
+      const syls = WORD_POLYPHONES[matchedWord];
+      const wChars = Array.from(matchedWord);
+      for (let j = 0; j < wChars.length; j++) {
+        visualWrap.appendChild(createZyCharEl(wChars[j], syls[j]));
+      }
+      i += wChars.length;
+      continue;
+    }
+
+    const ch = chars[i];
+    if (/[0-9:]/.test(ch)) {
+      // Group contiguous digits/colons
+      let numStr = ch;
+      while (i + 1 < chars.length && /[0-9:]/.test(chars[i + 1])) {
+        i++;
+        numStr += chars[i];
+      }
+      const numEl = document.createElement('span');
+      numEl.className = 'zy-num';
+      numEl.textContent = numStr;
+      visualWrap.appendChild(numEl);
+      i++;
+      continue;
+    }
+
+    const bopo = BOPO_DICT[ch];
+    if (bopo) {
+      visualWrap.appendChild(createZyCharEl(ch, bopo));
+    } else {
+      const punc = document.createElement('span');
+      punc.className = 'zy-punc';
+      punc.textContent = ch;
+      visualWrap.appendChild(punc);
+    }
+    i++;
+  }
+
+  frag.appendChild(visualWrap);
+  return frag;
+}
+
+function createZyCharEl(han, bopo) {
+  const parsed = parseZhuyinSyllable(bopo);
+  const wrap = document.createElement('span');
+  wrap.className = 'zy-char';
+
+  const hanEl = document.createElement('span');
+  hanEl.className = 'zy-han';
+  hanEl.textContent = han;
+  wrap.appendChild(hanEl);
+
+  if (parsed) {
+    const bopoEl = document.createElement('span');
+    bopoEl.className = 'zy-bopo' + (parsed.hasDot ? ' has-dot' : '');
+
+    if (parsed.hasDot) {
+      const dotEl = document.createElement('span');
+      dotEl.className = 'zy-tone-dot';
+      dotEl.textContent = '˙';
+      bopoEl.appendChild(dotEl);
+    }
+
+    const col = document.createElement('span');
+    col.className = 'zy-syl-row';
+    for (let s = 0; s < parsed.symbols.length; s++) {
+      const sym = document.createElement('span');
+      sym.className = 'zy-sym';
+      sym.textContent = parsed.symbols[s];
+      if (s === parsed.symbols.length - 1 && parsed.toneSide) {
+        const tone = document.createElement('span');
+        tone.className = 'zy-tone-side';
+        tone.textContent = parsed.toneSide;
+        sym.style.position = 'relative';
+        sym.appendChild(tone);
+      }
+      col.appendChild(sym);
+    }
+    bopoEl.appendChild(col);
+    wrap.appendChild(bopoEl);
+  }
+
+  return wrap;
+}
+
+function setZyContent(el, text) {
+  if (!el) return;
+  el.textContent = '';
+  el.appendChild(buildZhuyinNodes(text));
+}
+
+function applyAllStaticZhuyin() {
+  const targets = document.querySelectorAll('[data-zy]');
+  targets.forEach((el) => {
+    const raw = el.getAttribute('data-zy');
+    if (raw) setZyContent(el, raw);
+  });
+}
+
+// ============================================================================
+// 2. Curriculum Levels (Miaomiao's Day - Progressive 12-hour challenges)
+// ============================================================================
+const LEVELS = [
+  {
+    id: 1,
+    period: '上午',
+    skyType: 'morning',
+    skyEmoji: '☀️',
+    skyHint: '白天太陽公公升起來囉！',
+    title: '第一關：早起吃早餐',
+    shortLabel: '起床',
+    story: '早上太陽公公微笑了，妙妙起床刷牙洗臉，準備吃營養的早餐！',
+    prompt: '請順時針撥動藍色長針，撥出「上午 7 點鐘」。',
+    startHour: 6,
+    targetHour: 7,
+    digitalText: '上午 7 : 00',
+    successMsg: '答對了！紅色短針指著 7，藍色長針指著 12，現在是上午 7 點鐘！',
+    sceneKey: 'breakfast'
+  },
+  {
+    id: 2,
+    period: '上午',
+    skyType: 'morning',
+    skyEmoji: '☀️',
+    skyHint: '上午在學校認真上課！',
+    title: '第二關：快樂數學課',
+    shortLabel: '數學課',
+    story: '妙妙背著書包來到學校，大家一起上最有趣的數學課！',
+    prompt: '請順時針撥動藍色長針，撥出「上午 9 點鐘」。',
+    startHour: 7,
+    targetHour: 9,
+    digitalText: '上午 9 : 00',
+    successMsg: '太棒了！紅色短針指著 9，藍色長針指著 12，現在是上午 9 點鐘！',
+    sceneKey: 'math'
+  },
+  {
+    id: 3,
+    period: '上午',
+    skyType: 'morning',
+    skyEmoji: '☀️',
+    skyHint: '上午大掃除時間！',
+    title: '第三關：整理教室書櫃',
+    shortLabel: '打掃',
+    story: '打掃時間到了！妙妙負責把教室的書櫃排得整整齊齊。',
+    prompt: '請順時針撥動藍色長針，撥出「上午 11 點鐘」。',
+    startHour: 9,
+    targetHour: 11,
+    digitalText: '上午 11 : 00',
+    successMsg: '好厲害！紅色短針指著 11，藍色長針指著 12，現在是上午 11 點鐘！',
+    sceneKey: 'clean'
+  },
+  {
+    id: 4,
+    period: '中午',
+    skyType: 'noon',
+    skyEmoji: '☀️',
+    skyHint: '太陽公公在頭頂，中午到囉！',
+    title: '第四關：中午吃午餐',
+    shortLabel: '吃午餐',
+    story: '肚子咕嚕咕嚕叫！放學時間到了，大家要開心吃美味的午餐。',
+    prompt: '請順時針撥動藍色長針，撥出「中午 12 點鐘」。',
+    startHour: 11,
+    targetHour: 12,
+    digitalText: '中午 12 : 00',
+    successMsg: '答對了！長針和短針都指著 12，現在是中午 12 點鐘！',
+    sceneKey: 'lunch'
+  },
+  {
+    id: 5,
+    period: '下午',
+    skyType: 'afternoon',
+    skyEmoji: '🌤️',
+    skyHint: '中午過後就是下午！',
+    title: '第五關：操場玩遊戲',
+    shortLabel: '玩遊戲',
+    story: '下午太陽暖洋洋的，妙妙寫完功課後，到操場和好朋友溜滑梯玩遊戲！',
+    prompt: '請順時針撥動藍色長針，撥出「下午 3 點鐘」。',
+    startHour: 12,
+    targetHour: 3,
+    digitalText: '下午 3 : 00',
+    successMsg: '真聰明！紅色短針指著 3，藍色長針指著 12，現在是下午 3 點鐘！',
+    sceneKey: 'play'
+  },
+  {
+    id: 6,
+    period: '晚上',
+    skyType: 'night',
+    skyEmoji: '🌙',
+    skyHint: '月亮出來了，天色暗下來囉！',
+    title: '第六關：全家吃晚餐',
+    shortLabel: '吃晚餐',
+    story: '夜晚月亮出來了，爸爸媽媽回到家，全家人一起吃香噴噴的晚餐！',
+    prompt: '請順時針撥動藍色長針，撥出「晚上 6 點鐘」。',
+    startHour: 3,
+    targetHour: 6,
+    digitalText: '晚上 6 : 00',
+    successMsg: '答對了！紅色短針指著 6，藍色長針指著 12，現在是晚上 6 點鐘！',
+    sceneKey: 'dinner'
+  },
+  {
+    id: 7,
+    period: '晚上',
+    skyType: 'night',
+    skyEmoji: '🌙',
+    skyHint: '夜晚星星眨眼睛，該休息囉！',
+    title: '第七關：上床睡覺囉',
+    shortLabel: '睡覺',
+    story: '星星眨眨眼，妙妙蓋好被子準備睡覺囉！早睡早起才會有精神。',
+    prompt: '請順時針撥動藍色長針，撥出「晚上 9 點鐘」。',
+    startHour: 6,
+    targetHour: 9,
+    digitalText: '晚上 9 : 00',
+    successMsg: '恭喜全部過關！短針指著 9，長針指著 12，現在是晚上 9 點鐘！',
+    sceneKey: 'sleep'
+  }
+];
+
+// ============================================================================
+// 3. App State & Shim Persistence
+// ============================================================================
+let appState = {
+  currentLevelIdx: 0,
+  completedIds: [],
+  studentName: '',
+  soundEnabled: true,
+  autoSpeak: true
+};
+
+// Continuous cumulative minutes on the 12-hour dial (0 .. infinity, 60 min = 1 full minute-hand circle)
+let totalMinutes = 360; // starts at 6:00 for Level 1
+let isDragging = false;
+let lastToastTime = 0;
+let lastTickStep = 0;
+let audioCtx = null;
+
+// ============================================================================
+// 4. Web Audio Synthesizer & Speech Synthesis
+// ============================================================================
+function getAudioContext() {
+  if (!appState.soundEnabled) return null;
+  if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new Ctx();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+function playTickSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(680, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(320, ctx.currentTime + 0.03);
+  gain.gain.setValueAtTime(0.08, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.04);
+}
+
+function playBoopSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(240, ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(170, ctx.currentTime + 0.14);
+  gain.gain.setValueAtTime(0.12, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.16);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.17);
+}
+
+function playSuccessChime() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+  notes.forEach((freq, idx) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const t = ctx.currentTime + idx * 0.09;
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.16, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.36);
+  });
+}
+
+function playVictoryFanfare() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const notes = [
+    { f: 523.25, d: 0.00 },
+    { f: 659.25, d: 0.10 },
+    { f: 783.99, d: 0.20 },
+    { f: 1046.5, d: 0.32 },
+    { f: 783.99, d: 0.48 },
+    { f: 1046.5, d: 0.60 }
+  ];
+  notes.forEach((n) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const t = ctx.currentTime + n.d;
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(n.f, t);
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.45);
+  });
+}
+
+function speakText(text) {
+  if (!appState.soundEnabled) return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'zh-TW';
+    utter.rate = 0.92;
+    utter.pitch = 1.08;
+    const voices = window.speechSynthesis.getVoices();
+    const twVoice = voices.find((v) => v.lang && v.lang.toLowerCase().includes('zh-tw'));
+    if (twVoice) utter.voice = twVoice;
+    window.speechSynthesis.speak(utter);
+  } catch (e) {
+    // Graceful fallback if speech synthesis is restricted
+  }
+}
+
+// ============================================================================
+// 5. Clock Geometry & Strict Clockwise-Only Drag Physics
+// ============================================================================
+function buildClockFace() {
+  const ticksGroup = document.getElementById('clock-ticks');
+  const numsGroup = document.getElementById('clock-numbers');
+  if (!ticksGroup || !numsGroup) return;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  ticksGroup.textContent = '';
+  numsGroup.textContent = '';
+
+  for (let m = 0; m < 60; m++) {
+    const angleRad = (m * 6 * Math.PI) / 180;
+    const isMajor = m % 5 === 0;
+    const rOuter = 160;
+    const rInner = isMajor ? 144 : 152;
+    const x1 = 200 + rInner * Math.sin(angleRad);
+    const y1 = 200 - rInner * Math.cos(angleRad);
+    const x2 = 200 + rOuter * Math.sin(angleRad);
+    const y2 = 200 - rOuter * Math.cos(angleRad);
+
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', x1.toFixed(2));
+    line.setAttribute('y1', y1.toFixed(2));
+    line.setAttribute('x2', x2.toFixed(2));
+    line.setAttribute('y2', y2.toFixed(2));
+    line.setAttribute('class', isMajor ? 'clock-tick-major' : 'clock-tick-minor');
+    ticksGroup.appendChild(line);
+  }
+
+  for (let h = 1; h <= 12; h++) {
+    const angleRad = (h * 30 * Math.PI) / 180;
+    const rNum = 120;
+    const nx = 200 + rNum * Math.sin(angleRad);
+    const ny = 200 - rNum * Math.cos(angleRad);
+
+    const txt = document.createElementNS(ns, 'text');
+    txt.setAttribute('x', nx.toFixed(2));
+    txt.setAttribute('y', ny.toFixed(2));
+    txt.setAttribute('class', h === 12 ? 'clock-num is-top' : 'clock-num');
+    txt.textContent = String(h);
+    numsGroup.appendChild(txt);
+  }
+}
+
+function updateClockHands() {
+  const minuteGroup = document.getElementById('minute-hand-group');
+  const hourGroup = document.getElementById('hour-hand-group');
+  if (!minuteGroup || !hourGroup) return;
+
+  // Gear ratio: minute hand = 6 deg per minute; hour hand = 0.5 deg per minute (12:1 locked ratio)
+  const minuteDeg = ((totalMinutes % 60) + 60) % 60 * 6;
+  const hourDeg = ((totalMinutes % 720) + 720) % 720 * 0.5;
+
+  minuteGroup.setAttribute('transform', `rotate(${minuteDeg.toFixed(3)} 200 200)`);
+  hourGroup.setAttribute('transform', `rotate(${hourDeg.toFixed(3)} 200 200)`);
+  minuteGroup.setAttribute('aria-valuenow', String(Math.round(totalMinutes % 720)));
+}
+
+function showClockToast(msg) {
+  const now = Date.now();
+  if (now - lastToastTime < 900) return;
+  lastToastTime = now;
+
+  const toast = document.getElementById('clock-toast');
+  const stage = document.getElementById('clock-stage');
+  if (!toast) return;
+  setZyContent(toast, msg);
+  toast.classList.add('is-visible');
+  if (stage) {
+    stage.classList.remove('shake-once');
+    void stage.offsetWidth;
+    stage.classList.add('shake-once');
+  }
+  playBoopSound();
+
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.classList.remove('is-visible');
+  }, 1800);
+}
+
+function getClockPointerDeg(clientX, clientY) {
+  const svg = document.getElementById('clock-svg');
+  if (!svg) return null;
+  const rect = svg.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = clientX - cx;
+  const dy = clientY - cy;
+  const dist = Math.hypot(dx, dy);
+  // Ignore clicks right on the pivot center to prevent wild angle flips
+  if (dist < rect.width * 0.05) return null;
+
+  let deg = (Math.atan2(dx, -dy) * 180) / Math.PI;
+  if (deg < 0) deg += 360;
+  return deg;
+}
+
+function setupClockInteractions() {
+  const minuteGroup = document.getElementById('minute-hand-group');
+  const hourGroup = document.getElementById('hour-hand-group');
+  if (!minuteGroup || !hourGroup) return;
+
+  hourGroup.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showClockToast('紅色短針鎖住囉！請拉動藍色長針。');
+  });
+
+  minuteGroup.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    getAudioContext();
+    isDragging = true;
+    minuteGroup.classList.add('is-dragging');
+    try {
+      minuteGroup.setPointerCapture(e.pointerId);
+    } catch (err) {}
+    lastTickStep = Math.floor(totalMinutes / 5);
+  });
+
+  minuteGroup.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const pointerDeg = getClockPointerDeg(e.clientX, e.clientY);
+    if (pointerDeg === null) return;
+
+    const currentMinuteDeg = (((totalMinutes % 60) + 60) % 60) * 6;
+    let delta = pointerDeg - currentMinuteDeg;
+    if (delta > 180) delta -= 360;
+    if (delta <= -180) delta += 360;
+
+    // STRICT CLOCKWISE ONLY: Reject negative deltas beyond tiny 1.5° sensor jitter
+    if (delta < -1.5) {
+      showClockToast('時鐘只能順時針往前轉，不能倒退喔！');
+      return;
+    }
+
+    if (delta > 0 && delta < 145) {
+      totalMinutes += delta / 6;
+      updateClockHands();
+
+      const step = Math.floor(totalMinutes / 5);
+      if (step !== lastTickStep) {
+        lastTickStep = step;
+        playTickSound();
+      }
+    }
+  });
+
+  function endDrag(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    minuteGroup.classList.remove('is-dragging');
+    try {
+      minuteGroup.releasePointerCapture(e.pointerId);
+    } catch (err) {}
+
+    // Gentle snap when very close to exact o'clock (within ±12 deg = ±2 min)
+    const modMin = ((totalMinutes % 60) + 60) % 60;
+    if (modMin <= 2.2) {
+      totalMinutes = Math.round(totalMinutes - modMin);
+    } else if (modMin >= 57.8) {
+      totalMinutes = Math.round(totalMinutes + (60 - modMin));
+    } else {
+      totalMinutes = Math.round(totalMinutes);
+    }
+    updateClockHands();
+  }
+
+  minuteGroup.addEventListener('pointerup', endDrag);
+  minuteGroup.addEventListener('pointercancel', endDrag);
+
+  // Keyboard support (clockwise only!)
+  minuteGroup.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === ' ') {
+      e.preventDefault();
+      totalMinutes += 15;
+      updateClockHands();
+      playTickSound();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      showClockToast('時鐘只能順時針往前轉，不能倒退喔！');
+    }
+  });
+}
+
+// ============================================================================
+// 6. Scene Illustrations (Clean Sticker-style Inline SVGs)
+// ============================================================================
+function getSceneSvgMarkup(sceneKey) {
+  switch (sceneKey) {
+    case 'breakfast':
+      return `<svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <circle cx="52" cy="18" r="10" fill="#f59e0b"/>
+        <circle cx="34" cy="44" r="18" fill="#f8eef8" stroke="#c2207f" stroke-width="3"/>
+        <circle cx="34" cy="44" r="11" fill="#fde68a"/>
+        <circle cx="34" cy="44" r="5" fill="#f59e0b"/>
+        <rect x="12" y="34" width="4" height="20" rx="2" fill="#7c52aa"/>
+      </svg>`;
+    case 'math':
+      return `<svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <rect x="10" y="14" width="52" height="44" rx="10" fill="#0096cc"/>
+        <rect x="16" y="20" width="40" height="32" rx="6" fill="#ffffff"/>
+        <text x="36" y="42" text-anchor="middle" font-weight="900" font-size="18" fill="#c2207f">1+2=3</text>
+      </svg>`;
+    case 'clean':
+      return `<svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <rect x="14" y="14" width="44" height="44" rx="8" fill="#f080c0"/>
+        <rect x="20" y="20" width="10" height="16" rx="2" fill="#ffffff"/>
+        <rect x="33" y="18" width="10" height="18" rx="2" fill="#0096cc"/>
+        <rect x="45" y="21" width="8" height="15" rx="2" fill="#fde047"/>
+        <line x1="18" y1="40" x2="54" y2="40" stroke="#7c52aa" stroke-width="4" stroke-linecap="round"/>
+      </svg>`;
+    case 'lunch':
+      return `<svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <circle cx="36" cy="14" r="8" fill="#f59e0b"/>
+        <rect x="14" y="26" width="44" height="32" rx="10" fill="#c2207f"/>
+        <rect x="20" y="32" width="15" height="20" rx="4" fill="#ffffff"/>
+        <rect x="38" y="32" width="14" height="9" rx="3" fill="#fde68a"/>
+        <rect x="38" y="43" width="14" height="9" rx="3" fill="#dcfce7"/>
+      </svg>`;
+    case 'play':
+      return `<svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <circle cx="54" cy="16" r="8" fill="#f59e0b"/>
+        <path d="M16 54 L26 22 L48 54" stroke="#7c52aa" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="48" cy="42" r="9" fill="#0096cc"/>
+      </svg>`;
+    case 'dinner':
+      return `<svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <path d="M52 14 A10 10 0 1 0 60 26 A8 8 0 1 1 52 14 Z" fill="#fde047"/>
+        <path d="M14 40 H58 C58 52 48 58 36 58 C24 58 14 52 14 40 Z" fill="#f080c0" stroke="#ffffff" stroke-width="3"/>
+        <path d="M26 30 Q28 24 26 20 M36 28 Q38 22 36 18 M46 30 Q48 24 46 20" stroke="#fde047" stroke-width="3" stroke-linecap="round"/>
+      </svg>`;
+    case 'sleep':
+    default:
+      return `<svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <path d="M22 14 A12 12 0 1 0 34 30 A9 9 0 1 1 22 14 Z" fill="#fde047"/>
+        <circle cx="52" cy="18" r="3" fill="#fde047"/>
+        <circle cx="44" cy="28" r="2" fill="#fde047"/>
+        <rect x="14" y="42" width="44" height="16" rx="8" fill="#0096cc"/>
+        <rect x="14" y="38" width="16" height="10" rx="5" fill="#ffffff"/>
+      </svg>`;
+  }
+}
+
+// ============================================================================
+// 7. Render UI & Challenge Flow
+// ============================================================================
+function renderLevelPills() {
+  const container = document.getElementById('level-pills');
+  const progressText = document.getElementById('progress-text');
+  const progressFill = document.getElementById('progress-fill');
+  const certBtn = document.getElementById('btn-open-cert');
+  if (!container) return;
+
+  container.textContent = '';
+  LEVELS.forEach((lvl, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    const isDone = appState.completedIds.includes(lvl.id);
+    const isCurrent = idx === appState.currentLevelIdx;
+    btn.className = 'level-pill' + (isCurrent ? ' is-current' : '') + (isDone && !isCurrent ? ' is-done' : '');
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+    btn.setAttribute('aria-label', `第 ${lvl.id} 關：${lvl.shortLabel}`);
+    btn.onclick = () => selectLevel(idx);
+    btn.textContent = isDone ? `⭐ ${lvl.id}` : `${lvl.id}`;
+    container.appendChild(btn);
+  });
+
+  const doneCount = appState.completedIds.length;
+  if (progressText) progressText.textContent = `${doneCount} / ${LEVELS.length}`;
+  if (progressFill) progressFill.style.width = `${Math.round((doneCount / LEVELS.length) * 100)}%`;
+  if (certBtn) {
+    certBtn.style.display = doneCount >= LEVELS.length ? 'inline-flex' : 'none';
+  }
+}
+
+function renderTimeline() {
+  const grid = document.getElementById('timeline-grid');
+  if (!grid) return;
+  grid.textContent = '';
+
+  LEVELS.forEach((lvl, idx) => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    const isDone = appState.completedIds.includes(lvl.id);
+    const isActive = idx === appState.currentLevelIdx;
+    item.className = 'timeline-item' + (isActive ? ' is-active' : '') + (isDone ? ' is-done' : '');
+    item.onclick = () => selectLevel(idx);
+
+    const icon = document.createElement('span');
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = lvl.skyEmoji;
+
+    const timeEl = document.createElement('span');
+    timeEl.className = 'timeline-time';
+    setZyContent(timeEl, `${lvl.period} ${lvl.targetHour} 點`);
+
+    const labelEl = document.createElement('span');
+    setZyContent(labelEl, lvl.shortLabel);
+
+    item.appendChild(icon);
+    item.appendChild(timeEl);
+    item.appendChild(labelEl);
+    grid.appendChild(item);
+  });
+}
+
+function renderCurrentLevel(shouldSpeak) {
+  const lvl = LEVELS[appState.currentLevelIdx];
+  if (!lvl) return;
+
+  // Set clock start position for this level
+  totalMinutes = lvl.startHour * 60;
+  updateClockHands();
+
+  // Scene banner
+  const banner = document.getElementById('scene-banner');
+  if (banner) {
+    banner.className = 'scene-banner' +
+      (lvl.skyType === 'afternoon' ? ' is-afternoon' : '') +
+      (lvl.skyType === 'night' ? ' is-night' : '');
+  }
+
+  const svgBox = document.getElementById('scene-svg-box');
+  if (svgBox) svgBox.innerHTML = getSceneSvgMarkup(lvl.sceneKey);
+
+  const periodBadge = document.getElementById('period-badge');
+  if (periodBadge) {
+    periodBadge.textContent = '';
+    const em = document.createElement('span');
+    em.setAttribute('aria-hidden', 'true');
+    em.textContent = lvl.skyEmoji;
+    const tx = document.createElement('span');
+    setZyContent(tx, `${lvl.period}・${lvl.skyHint}`);
+    periodBadge.appendChild(em);
+    periodBadge.appendChild(tx);
+  }
+
+  setZyContent(document.getElementById('level-title'), lvl.title);
+  setZyContent(document.getElementById('story-narrative'), lvl.story);
+  setZyContent(document.getElementById('story-prompt'), lvl.prompt);
+  setZyContent(
+    document.getElementById('hint-text'),
+    `整點的時候，藍色長針要指著 12，紅色短針要指著 ${lvl.targetHour} 喔！`
+  );
+
+  // Close hint & clear feedback
+  const hintBox = document.getElementById('hint-box');
+  const hintBtn = document.getElementById('btn-hint-toggle');
+  if (hintBox) hintBox.classList.remove('is-open');
+  if (hintBtn) hintBtn.setAttribute('aria-expanded', 'false');
+
+  const fb = document.getElementById('feedback-banner');
+  if (fb) fb.className = 'feedback-banner';
+
+  renderLevelPills();
+  renderTimeline();
+
+  if (shouldSpeak && appState.autoSpeak) {
+    speakText(`${lvl.title}。${lvl.story}${lvl.prompt}`);
+  }
+}
+
+// ============================================================================
+// 8. Interactive Handlers (All hoisted `function` declarations for onclick)
+// ============================================================================
+function selectLevel(idx) {
+  if (idx < 0 || idx >= LEVELS.length) return;
+  appState.currentLevelIdx = idx;
+  hideCertificateView();
+  renderCurrentLevel(true);
+  saveAppState();
+}
+
+function resetLevelClock() {
+  const lvl = LEVELS[appState.currentLevelIdx];
+  if (!lvl) return;
+  totalMinutes = lvl.startHour * 60;
+  updateClockHands();
+  playTickSound();
+}
+
+function toggleHint() {
+  const hintBox = document.getElementById('hint-box');
+  const hintBtn = document.getElementById('btn-hint-toggle');
+  if (!hintBox || !hintBtn) return;
+  const open = hintBox.classList.toggle('is-open');
+  hintBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function speakCurrentQuestion() {
+  const lvl = LEVELS[appState.currentLevelIdx];
+  if (!lvl) return;
+  speakText(`${lvl.story}${lvl.prompt}`);
+}
+
+function checkAnswer() {
+  const lvl = LEVELS[appState.currentLevelIdx];
+  if (!lvl) return;
+
+  const fb = document.getElementById('feedback-banner');
+  const fbText = document.getElementById('feedback-text');
+  const fbDigital = document.getElementById('feedback-digital');
+  const fbNextRow = document.getElementById('feedback-next-row');
+  const nextLabel = document.getElementById('next-btn-label');
+  if (!fb || !fbText || !fbDigital || !fbNextRow || !nextLabel) return;
+
+  // Compute current clock reading from totalMinutes
+  const normalizedMin = ((Math.round(totalMinutes) % 720) + 720) % 720;
+  const currentHourRaw = Math.floor(normalizedMin / 60);
+  const currentMin = normalizedMin % 60;
+  const displayHour = currentHourRaw === 0 ? 12 : currentHourRaw;
+
+  const isMinuteAtTop = currentMin <= 2 || currentMin >= 58;
+  // If currentMin is 58 or 59, the effective snapped hour is next hour
+  const effectiveHour = currentMin >= 58 ? (displayHour % 12) + 1 : displayHour;
+
+  if (isMinuteAtTop && effectiveHour === lvl.targetHour) {
+    // Snap cleanly to exact hour
+    totalMinutes = Math.round(totalMinutes / 60) * 60;
+    updateClockHands();
+
+    if (!appState.completedIds.includes(lvl.id)) {
+      appState.completedIds.push(lvl.id);
+    }
+
+    fb.className = 'feedback-banner is-success';
+    fbDigital.style.display = 'inline-flex';
+    setZyContent(fbDigital, `數字鐘：${lvl.digitalText}`);
+    setZyContent(fbText, lvl.successMsg);
+
+    const isLast = appState.currentLevelIdx === LEVELS.length - 1;
+    const allCleared = appState.completedIds.length >= LEVELS.length;
+    setZyContent(nextLabel, (isLast || allCleared) ? '🏆 領取撥鐘小達人獎狀' : '下一關');
+    fbNextRow.style.display = 'block';
+
+    playSuccessChime();
+    speakText(lvl.successMsg);
+    renderLevelPills();
+    renderTimeline();
+    saveAppState();
+  } else {
+    fb.className = 'feedback-banner is-retry';
+    fbDigital.style.display = 'none';
+    fbNextRow.style.display = 'none';
+
+    let msg = '';
+    if (!isMinuteAtTop) {
+      msg = '還差一點點喔！整點時，藍色長針要指著 12，再順時針轉轉看。';
+    } else {
+      msg = `藍色長針指著 12 了，很棒！不過紅色短針現在指著 ${effectiveHour}，我們要撥到 ${lvl.targetHour} 點鐘喔！`;
+    }
+    setZyContent(fbText, msg);
+    playBoopSound();
+    speakText(msg);
+  }
+}
+
+function goToNextLevel() {
+  const allCleared = appState.completedIds.length >= LEVELS.length;
+  if (appState.currentLevelIdx >= LEVELS.length - 1 || allCleared) {
+    showCertificateView();
+    return;
+  }
+  appState.currentLevelIdx += 1;
+  renderCurrentLevel(true);
+  saveAppState();
+}
+
+function toggleSound() {
+  appState.soundEnabled = !appState.soundEnabled;
+  const btn = document.getElementById('btn-sound');
+  const lbl = document.getElementById('sound-label');
+  if (btn) btn.setAttribute('aria-pressed', appState.soundEnabled ? 'true' : 'false');
+  if (lbl) setZyContent(lbl, appState.soundEnabled ? '音效開啟' : '音效關閉');
+  if (!appState.soundEnabled && 'speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  saveAppState();
+}
+
+function toggleAutoSpeak() {
+  appState.autoSpeak = !appState.autoSpeak;
+  const btn = document.getElementById('btn-autospeak');
+  if (btn) btn.setAttribute('aria-pressed', appState.autoSpeak ? 'true' : 'false');
+  saveAppState();
+}
+
+function handleResetAll(btn) {
+  const lbl = document.getElementById('reset-all-label');
+  if (btn.dataset.armed !== 'true') {
+    btn.dataset.armed = 'true';
+    if (lbl) setZyContent(lbl, '再按一次重頭開始');
+    clearTimeout(btn._armTimer);
+    btn._armTimer = setTimeout(() => {
+      btn.dataset.armed = 'false';
+      if (lbl) setZyContent(lbl, '重新挑戰');
+    }, 3200);
+    return;
+  }
+  btn.dataset.armed = 'false';
+  if (lbl) setZyContent(lbl, '重新挑戰');
+  appState.currentLevelIdx = 0;
+  appState.completedIds = [];
+  hideCertificateView();
+  renderCurrentLevel(true);
+  saveAppState();
+}
+
+// ============================================================================
+// 9. Victory Confetti & Custom Certificate (Preview, PNG Export, Print)
+// ============================================================================
+function showCertificateView() {
+  const ws = document.getElementById('challenge-workspace');
+  const tl = document.getElementById('timeline-section');
+  const vp = document.getElementById('victory-panel');
+  if (ws) ws.style.display = 'none';
+  if (tl) tl.style.display = 'none';
+  if (vp) vp.classList.add('is-visible');
+
+  updateCertificatePreview();
+  launchConfetti();
+  playVictoryFanfare();
+  speakText('太厲害了！恭喜你完成全部七道挑戰，獲得撥鐘小達人榮譽獎狀！');
+}
+
+function hideCertificateView() {
+  const ws = document.getElementById('challenge-workspace');
+  const tl = document.getElementById('timeline-section');
+  const vp = document.getElementById('victory-panel');
+  if (ws) ws.style.display = 'grid';
+  if (tl) tl.style.display = 'flex';
+  if (vp) vp.classList.remove('is-visible');
+}
+
+function backToPractice() {
+  hideCertificateView();
+  renderCurrentLevel(false);
+}
+
+function replayFromVictory() {
+  appState.currentLevelIdx = 0;
+  appState.completedIds = [];
+  hideCertificateView();
+  renderCurrentLevel(true);
+  saveAppState();
+}
+
+function onStudentNameInput(val) {
+  appState.studentName = val;
+  updateCertificatePreview();
+  saveAppState();
+}
+
+function updateCertificatePreview() {
+  const input = document.getElementById('student-name-input');
+  const display = document.getElementById('cert-name-display');
+  const dateEl = document.getElementById('cert-date-display');
+  if (input && input.value !== appState.studentName) {
+    input.value = appState.studentName;
+  }
+  const cleanName = (appState.studentName || '').trim() || '小小達人';
+  if (display) display.textContent = `${cleanName} 小朋友`;
+
+  const now = new Date();
+  const dateStr = `頒發日期：${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
+  if (dateEl) setZyContent(dateEl, dateStr);
+}
+
+function launchConfetti() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const styles = getComputedStyle(document.documentElement);
+  const colors = [
+    styles.getPropertyValue('--primary').trim(),
+    styles.getPropertyValue('--secondary').trim(),
+    styles.getPropertyValue('--tertiary').trim(),
+    styles.getPropertyValue('--day-sun').trim(),
+    styles.getPropertyValue('--positive').trim()
+  ];
+
+  const particles = Array.from({ length: 90 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -20 - Math.random() * 240,
+    vx: (Math.random() - 0.5) * 4,
+    vy: 2.5 + Math.random() * 4,
+    size: 7 + Math.random() * 8,
+    rot: Math.random() * Math.PI * 2,
+    vRot: (Math.random() - 0.5) * 0.14,
+    color: colors[Math.floor(Math.random() * colors.length)]
+  }));
+
+  let frame = 0;
+  cancelAnimationFrame(canvas._animId);
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vRot;
+      if (p.y < canvas.height + 30) alive = true;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.65);
+      ctx.restore();
+    }
+    frame++;
+    if (alive && frame < 240) {
+      canvas._animId = requestAnimationFrame(tick);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  tick();
+}
+
+function downloadCertificatePng() {
+  const styles = getComputedStyle(document.documentElement);
+  const bgCream = styles.getPropertyValue('--cert-cream').trim() || '#fffdf5';
+  const gold = styles.getPropertyValue('--cert-gold').trim() || '#d98200';
+  const pink = styles.getPropertyValue('--primary').trim() || '#c2207f';
+  const pinkLight = styles.getPropertyValue('--primary-container').trim() || '#f080c0';
+  const grape = styles.getPropertyValue('--secondary').trim() || '#7c52aa';
+  const plum = styles.getPropertyValue('--on-surface').trim() || '#2e1a28';
+  const plumSoft = styles.getPropertyValue('--on-surface-variant').trim() || '#604868';
+  const sky = styles.getPropertyValue('--tertiary').trim() || '#0096cc';
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1600;
+  canvas.height = 1120;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  // Background
+  ctx.fillStyle = bgCream;
+  ctx.fillRect(0, 0, 1600, 1120);
+
+  // Outer gold border
+  ctx.strokeStyle = gold;
+  ctx.lineWidth = 22;
+  ctx.strokeRect(36, 36, 1528, 1048);
+
+  // Inner dashed pink border
+  ctx.save();
+  ctx.setLineDash([18, 14]);
+  ctx.strokeStyle = pinkLight;
+  ctx.lineWidth = 8;
+  ctx.strokeRect(74, 74, 1452, 972);
+  ctx.restore();
+
+  // Corner decorative dots
+  const corners = [[120, 120], [1480, 120], [120, 1000], [1480, 1000]];
+  corners.forEach(([x, y], idx) => {
+    ctx.beginPath();
+    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.fillStyle = idx % 2 === 0 ? pink : sky;
+    ctx.fill();
+  });
+
+  // Top Clock Emblem
+  ctx.beginPath();
+  ctx.arc(800, 195, 64, 0, Math.PI * 2);
+  ctx.fillStyle = pink;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(800, 195, 42, 0, Math.PI * 2);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(800, 195);
+  ctx.lineTo(800, 166);
+  ctx.moveTo(800, 195);
+  ctx.lineTo(824, 195);
+  ctx.stroke();
+
+  // Title
+  ctx.fillStyle = pink;
+  ctx.textAlign = 'center';
+  ctx.font = '900 68px "Noto Sans TC", "DM Sans", sans-serif';
+  ctx.fillText('撥鐘小達人榮譽獎狀', 800, 340);
+
+  // Recipient name
+  const cleanName = (appState.studentName || '').trim() || '小小達人';
+  ctx.fillStyle = grape;
+  ctx.font = '900 64px "Noto Sans TC", "DM Sans", sans-serif';
+  ctx.fillText(`${cleanName} 小朋友`, 800, 470);
+
+  ctx.strokeStyle = pinkLight;
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(500, 498);
+  ctx.lineTo(1100, 498);
+  ctx.stroke();
+
+  // Body lines
+  ctx.fillStyle = plum;
+  ctx.font = '700 34px "Noto Sans TC", "DM Sans", sans-serif';
+  ctx.fillText('完成「幾點鐘」全部七道生活作息撥鐘挑戰，', 800, 590);
+  ctx.fillText('能正確辨識長針、短針與上午、中午、下午、晚上的整點時刻，', 800, 650);
+  ctx.fillText('表現非常優秀，特頒此狀，以資鼓勵！', 800, 710);
+
+  // Stars row
+  ctx.fillStyle = gold;
+  ctx.font = '700 40px "Noto Sans TC", sans-serif';
+  ctx.fillText('★  ★  ★  ★  ★  ★  ★', 800, 800);
+
+  // Footer
+  const now = new Date();
+  const dateStr = `頒發日期：${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
+  ctx.fillStyle = plumSoft;
+  ctx.font = '700 28px "Noto Sans TC", "DM Sans", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('頒發單位：一年級數學時間探索學院', 150, 940);
+  ctx.textAlign = 'right';
+  ctx.fillText(dateStr, 1450, 940);
+
+  const dataUrl = canvas.toDataURL('image/png');
+  const base64 = dataUrl && dataUrl.includes(',') ? dataUrl.split(',')[1] : '';
+  const filename = `撥鐘小達人獎狀_${cleanName}.png`;
+
+  if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === 'function') {
+    window.notebookAppApi.triggerFileDownload({
+      content: base64,
+      contentType: 'image/png',
+      encoding: 'base64',
+      filename: filename
+    });
+  } else {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+}
+
+function printCertificate() {
+  window.print();
+}
+
+// ============================================================================
+// 10. Initialization & Persistence Wiring
+// ============================================================================
+async function saveAppState() {
+  if (!window.notebookAppApi || typeof window.notebookAppApi.setAppState !== 'function') return;
+  try {
+    await window.notebookAppApi.setAppState({
+      currentLevelIdx: appState.currentLevelIdx,
+      completedIds: appState.completedIds,
+      studentName: appState.studentName,
+      soundEnabled: appState.soundEnabled,
+      autoSpeak: appState.autoSpeak
+    });
+  } catch (e) {
+    // Ignore transient persistence errors
+  }
+}
+
+async function initApp() {
+  applyAllStaticZhuyin();
+  buildClockFace();
+  setupClockInteractions();
+
+  if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === 'function') {
+    try {
+      const saved = await window.notebookAppApi.getAppState();
+      if (saved && typeof saved === 'object') {
+        if (typeof saved.currentLevelIdx === 'number' && saved.currentLevelIdx >= 0 && saved.currentLevelIdx < LEVELS.length) {
+          appState.currentLevelIdx = saved.currentLevelIdx;
+        }
+        if (Array.isArray(saved.completedIds)) {
+          appState.completedIds = saved.completedIds.filter((id) => LEVELS.some((l) => l.id === id));
+        }
+        if (typeof saved.studentName === 'string') {
+          appState.studentName = saved.studentName;
+        }
+        if (typeof saved.soundEnabled === 'boolean') {
+          appState.soundEnabled = saved.soundEnabled;
+        }
+        if (typeof saved.autoSpeak === 'boolean') {
+          appState.autoSpeak = saved.autoSpeak;
+        }
+      }
+    } catch (e) {
+      // Proceed with defaults
+    }
+  }
+
+  // Sync toolbar toggle states
+  const btnSound = document.getElementById('btn-sound');
+  const lblSound = document.getElementById('sound-label');
+  if (btnSound) btnSound.setAttribute('aria-pressed', appState.soundEnabled ? 'true' : 'false');
+  if (lblSound) setZyContent(lblSound, appState.soundEnabled ? '音效開啟' : '音效關閉');
+
+  const btnAuto = document.getElementById('btn-autospeak');
+  if (btnAuto) btnAuto.setAttribute('aria-pressed', appState.autoSpeak ? 'true' : 'false');
+
+  updateCertificatePreview();
+  renderCurrentLevel(false);
+
+  if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === 'function') {
+    window.notebookAppApi.notifyAppReady();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
